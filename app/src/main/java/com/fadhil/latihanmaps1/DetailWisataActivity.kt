@@ -10,21 +10,35 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
-class DetailWisataActivity : AppCompatActivity() {
-    private  lateinit var btngas : Button
+class DetailWisataActivity : AppCompatActivity() , OnMapReadyCallback {
+    private lateinit var btngas: Button
+    private lateinit var mMap: GoogleMap
+
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_detail_wisata)
-        val Image = intent.getIntExtra("imagewisata",0)
+
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapFragment.getMapAsync(this)
+
+
+        val Image = intent.getIntExtra("imagewisata", 0)
         val nama = intent.getStringExtra("namaWisata")
         val deskripsi = intent.getStringExtra("deskripsi")
         val latitude = intent.getDoubleExtra("latitude", 0.0)
         val longitude = intent.getDoubleExtra("longitude", 0.0)
-
 
 
         val txtnama = findViewById<TextView>(R.id.txtnama)
@@ -35,22 +49,45 @@ class DetailWisataActivity : AppCompatActivity() {
         txtnama.text = nama
         imgwisata.setImageResource(Image)
 
-        btngas = findViewById(R.id.btngas)
+//        btngas = findViewById(R.id.btngas)
 
-        btngas.setOnClickListener(){
-            val intent = Intent(this,MapsActivity::class.java).apply{
-                putExtra("latitude", latitude)
-                putExtra("longitude", longitude)
-                putExtra("namaWisata",nama)
-            }
-            startActivity(intent)
-
-        }
+//        btngas.setOnClickListener(){
+//            val intent = Intent(this,MapsActivity::class.java).apply{
+//                putExtra("latitude", latitude)
+//                putExtra("longitude", longitude)
+//                putExtra("namaWisata",nama)
+//            }
+//            startActivity(intent)
+//
+//       }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
+        }
+    }
+
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+        // Ambil data latitude dan longitude
+        val latitude = intent.getDoubleExtra("latitude", 0.0)
+        val longitude = intent.getDoubleExtra("longitude", 0.0)
+        val namawisata = intent.getStringExtra("namaWisata")
+        val lokasiWisata = LatLng(latitude, longitude)
+
+        // Tambahkan marker dan pindahkan kamera ke lokasi wisata
+        mMap.addMarker(MarkerOptions().position(lokasiWisata).title(namawisata))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lokasiWisata, 15f))
+
+        mMap.setOnMapClickListener {
+            // Buat intent untuk berpindah ke MapsActivity
+            val intent = Intent(this, MapsActivity::class.java).apply {
+                putExtra("latitude", latitude)
+                putExtra("longitude", longitude)
+                putExtra("namaWisata", namawisata)
+            }
+            startActivity(intent)
         }
     }
 }
